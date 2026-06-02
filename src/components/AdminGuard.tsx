@@ -1,5 +1,5 @@
 import { isAdmin, useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useEffect, useRef } from "react";
 
 export default function AdminGuard({
@@ -9,15 +9,16 @@ export default function AdminGuard({
 }) {
   const { role, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const redirected = useRef(false);
 
   useEffect(() => {
-    console.log("user role is: ", role);
     if (!role || !isAdmin(role)) {
       redirected.current = true;
-      navigate("/login", { replace: true });
+      const redirectPath = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?redirect=${redirectPath}`, { replace: true });
     }
-  }, [isAuthenticated, role, navigate]);
+  }, [isAuthenticated, role, navigate, location]);
 
   if (!role || !isAdmin(role)) return null;
   return <>{children}</>;

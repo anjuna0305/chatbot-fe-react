@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 export default function AuthGuard({ children, roleValidators }: Props) {
   const { isAuthenticated, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const redirected = useRef(false);
 
   let roleAuth = true;
@@ -25,9 +26,12 @@ export default function AuthGuard({ children, roleValidators }: Props) {
   useEffect(() => {
     if (!roleAuth || (!isAuthenticated && !redirected.current)) {
       redirected.current = true;
-      navigate("/login", { replace: true });
+      const redirectPath = encodeURIComponent(
+        location.pathname + location.search,
+      );
+      navigate(`/login?redirect=${redirectPath}`, { replace: true });
     }
-  }, [isAuthenticated, navigate, roleAuth]);
+  }, [isAuthenticated, navigate, roleAuth, location]);
 
   if (!isAuthenticated) {
     return null;

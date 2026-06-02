@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAlert } from "@/contexts/AlertContext";
 
@@ -17,10 +17,14 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const { addAlert } = useAlert();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const location = useLocation();
 
+  console.log("pathname: ", location.pathname);
+  console.log("search: ", location.search);
   const {
     register,
     handleSubmit,
@@ -33,7 +37,8 @@ export default function LoginPage() {
     setErrorMessage(null);
     try {
       await login(data);
-      navigate("/p/chatbot");
+      const redirectTo = searchParams.get("redirect") || "/p/chatbot";
+      navigate(decodeURIComponent(redirectTo), { replace: true });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Login failed. Please try again.";
