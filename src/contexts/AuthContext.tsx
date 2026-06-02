@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useCallback, useMemo } from "react";
 import { LoginRequest, LoginResponse } from "@/types/auth";
-import { API_ENDPOINTS, parseErrorMessage } from "@/utils/api";
+import { API_ENDPOINTS } from "@/utils/api";
+import axiosInstance from "@/api/axios";
 
 type AuthState = {
   accessToken: string | null;
@@ -33,23 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     React.useState<AuthState>(getInitialAuthState);
 
   const login = useCallback(async (credentials: LoginRequest) => {
-    const response = await fetch(API_ENDPOINTS.LOGIN, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(credentials),
-    });
+    const response = await axiosInstance.post<LoginResponse>(
+      API_ENDPOINTS.LOGIN,
+      credentials,
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage = parseErrorMessage(
-        errorData,
-        `Login failed with status ${response.status}`,
-      );
-      throw new Error(errorMessage);
-    }
-
-    const data: LoginResponse = await response.json();
+    const data = response.data;
 
     localStorage.setItem(STORAGE_KEY_TOKEN, data.access_token);
     localStorage.setItem(STORAGE_KEY_ROLE, data.role);

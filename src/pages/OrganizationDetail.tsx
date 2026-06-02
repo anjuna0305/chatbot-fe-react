@@ -15,6 +15,7 @@ import { API_ENDPOINTS } from "@/utils/api";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
+import axiosInstance from "@/api/axios";
 
 export default function OrganizationDetailPage() {
   const navigate = useNavigate();
@@ -29,18 +30,16 @@ export default function OrganizationDetailPage() {
   const fetchOrganization = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.ORGANIZATION_DETAIL(orgId), {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to fetch organization");
-      const data: Organization = await response.json();
-      setOrg(data);
+      const response = await axiosInstance.get<Organization>(
+        API_ENDPOINTS.ORGANIZATION_DETAIL(orgId),
+      );
+      setOrg(response.data);
     } catch {
-      addAlert("error", "Failed to load organiazation details");
+      // Error alert handled by axios interceptor
     } finally {
       setLoading(false);
     }
-  }, [orgId, addAlert]);
+  }, [orgId]);
 
   useEffect(() => {
     fetchOrganization();
@@ -54,21 +53,16 @@ export default function OrganizationDetailPage() {
           ? API_ENDPOINTS.ORGANIZATION_DEACTIVATE(orgId)
           : API_ENDPOINTS.ORGANIZATION_ACTIVATE(orgId);
 
-      const response = await fetch(path, {
-        method: "PUT",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to update");
-      const updated: Organization = await response.json();
-      setOrg(updated);
+      const response = await axiosInstance.put<Organization>(path);
+      setOrg(response.data);
       addAlert(
         "success",
-        updated.is_active
+        response.data.is_active
           ? "Organization activated"
           : "Organization deactivated",
       );
     } catch {
-      addAlert("error", "Failed to update activation status");
+      // Error alert handled by axios interceptor
     } finally {
       setTogglingActive(false);
     }

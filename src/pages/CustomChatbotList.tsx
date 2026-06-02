@@ -32,6 +32,7 @@ import { CustomChatbot } from "@/types/custom-chatbot";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
+import axiosInstance from "@/api/axios";
 
 type FormErrors = {
   chatbot_name?: string;
@@ -69,38 +70,30 @@ export default function CustomChatbotListPage() {
   const fetchChatbots = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.CUSTOM_CHATBOT_LIST, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch chatbots");
-      }
-      const data = await response.json();
-      setChatbots(data);
+      const response = await axiosInstance.get<CustomChatbot[]>(
+        API_ENDPOINTS.CUSTOM_CHATBOT_LIST,
+      );
+      setChatbots(response.data);
     } catch {
-      addAlert("error", "Failed to load custom chatbots");
+      // Error alert handled by axios interceptor
     } finally {
       setLoading(false);
     }
-  }, [addAlert]);
+  }, []);
 
   const fetchOrganizations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.ORGANIZATION_LIST, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch organizations");
-      }
-      const data = await response.json();
-      setOrganizations(data);
+      const response = await axiosInstance.get<Organization[]>(
+        API_ENDPOINTS.ORGANIZATION_LIST,
+      );
+      setOrganizations(response.data);
     } catch {
-      addAlert("error", "Failed to load custom organizations");
+      // Error alert handled by axios interceptor
     } finally {
       setLoading(false);
     }
-  }, [addAlert]);
+  }, []);
 
   useEffect(() => {
     fetchChatbots();
@@ -130,29 +123,24 @@ export default function CustomChatbotListPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(API_ENDPOINTS.CUSTOM_CHATBOT_LIST, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
+      const response = await axiosInstance.post<CustomChatbot>(
+        API_ENDPOINTS.CUSTOM_CHATBOT_LIST,
+        {
           chatbot_name: form.chatbot_name.trim(),
           description: form.description.trim(),
           url_path: form.url_path.trim(),
           organization_id: form.organization_id,
           is_public: "true",
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create chatbot");
-      }
+        },
+      );
+
       addAlert("success", "Chatbot created successfully");
       setDialogOpen(false);
       setForm(INITIAL_FORM);
       setErrors({});
-      const data: CustomChatbot = await response.json();
-      navigate(`custom-chatbot/${data.id}`);
+      navigate(`custom-chatbot/${response.data.id}`);
     } catch {
-      addAlert("error", "Failed to create chatbot");
+      // Error alert handled by axios interceptor
     } finally {
       setSubmitting(false);
     }

@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router";
 import { RegisterRequest } from "@/types/auth";
-import { API_ENDPOINTS, parseErrorMessage } from "@/utils/api";
+import { API_ENDPOINTS } from "@/utils/api";
 import { useAlert } from "@/hooks/useAlert";
+import axiosInstance from "@/api/axios";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -31,29 +32,12 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     try {
       const payload: RegisterRequest = { ...data, role: "general_user" };
-      const response = await fetch(API_ENDPOINTS.REGISTER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = parseErrorMessage(
-          errorData,
-          `Registration failed with status ${response.status}`,
-        );
-        throw new Error(errorMessage);
-      }
+      await axiosInstance.post(API_ENDPOINTS.REGISTER, payload);
 
       addAlert("success", "Registration successful! Please sign in.");
       navigate("/login");
-    } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Registration failed. Please try again.";
-      addAlert("error", msg);
+    } catch {
+      // Error alert handled by axios interceptor
     }
   };
 

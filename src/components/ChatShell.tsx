@@ -10,25 +10,22 @@ import { Message } from "@/types/message";
 import { VoiceChat } from "@mui/icons-material";
 import MessageBox from "./MessageBox";
 import { API_ENDPOINTS } from "@/utils/api";
+import axiosInstance from "@/api/axios";
 
 interface Props {
   heading?: ReactNode;
 }
 
+type ChatResponse = {
+  response: string;
+};
+
 const sendMessage = async (message: string): Promise<string> => {
-  const response = await fetch(API_ENDPOINTS.CHATBOT_CHAT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ message }),
-  });
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.response as string;
+  const response = await axiosInstance.post<ChatResponse>(
+    API_ENDPOINTS.CHATBOT_CHAT,
+    { message },
+  );
+  return response.data.response;
 };
 
 export default function ChatShell({ heading }: Props) {

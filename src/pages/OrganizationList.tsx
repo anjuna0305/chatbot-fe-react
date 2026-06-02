@@ -24,10 +24,11 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
-import { API_ENDPOINTS, parseErrorMessage } from "@/utils/api";
+import { API_ENDPOINTS } from "@/utils/api";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
+import axiosInstance from "@/api/axios";
 
 type FormErrors = {
   name?: string;
@@ -50,20 +51,16 @@ export default function OrganizationsPage() {
   const fetchOrganizations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.ORGANIZATION_LIST, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch organizations");
-      }
-      const data = await response.json();
-      setOrganizations(data);
+      const response = await axiosInstance.get<Organization[]>(
+        API_ENDPOINTS.ORGANIZATION_LIST,
+      );
+      setOrganizations(response.data);
     } catch {
-      addAlert("error", "Failed to load custom organizations");
+      // Error alert handled by axios interceptor
     } finally {
       setLoading(false);
     }
-  }, [addAlert]);
+  }, []);
 
   useEffect(() => {
     fetchOrganizations();
@@ -84,35 +81,21 @@ export default function OrganizationsPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(API_ENDPOINTS.ORGANIZATION_LIST, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
+      const response = await axiosInstance.post<Organization>(
+        API_ENDPOINTS.ORGANIZATION_LIST,
+        {
           name: form.name.trim(),
           is_active: false,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = parseErrorMessage(
-          errorData,
-          `Registration failed with status ${response.status}`,
-        );
-        throw new Error(errorMessage);
-      }
+        },
+      );
 
       addAlert("success", "Organization created successfully");
       setDialogOpen(false);
       setForm(INITIAL_FORM);
       setErrors({});
-      const data: Organization = await response.json();
-      navigate(`organizations/${data.id}`);
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to create organization";
-      addAlert("error", msg);
+      navigate(`organizations/${response.data.id}`);
+    } catch {
+      // Error alert handled by axios interceptor
     } finally {
       setSubmitting(false);
     }

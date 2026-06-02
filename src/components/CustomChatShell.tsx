@@ -38,15 +38,12 @@ const sendCustomMessage = async (
 const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
   const formData = new FormData();
   formData.append("file", audioBlob, "audio.wav");
-  const response = await fetch(API_ENDPOINTS.ASR_TRANSCRIBE, {
-    method: "POST",
-    body: formData,
-  });
-  if (!response.ok) {
-    throw new Error(`ASR error: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.transcription as string;
+  const response = await axiosInstance.post<{ transcription: string }>(
+    API_ENDPOINTS.ASR_TRANSCRIBE,
+    formData,
+    { withCredentials: false },
+  );
+  return response.data.transcription;
 };
 
 const fetchTtsAudioUrl = async (text: string): Promise<string> => {
@@ -57,16 +54,12 @@ const fetchTtsAudioUrl = async (text: string): Promise<string> => {
     voice: "male",
     input_type: "sinhala",
   };
-  const response = await fetch(API_ENDPOINTS.TTS_GENERATE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    throw new Error(`TTS error: ${response.status}`);
-  }
-  const data = await response.json();
-  return `${API_ENDPOINTS.TTS_GENERATE.replace("/voicebot-generate-audio", "")}${data.audioUrl}?t=${Date.now()}`;
+  const response = await axiosInstance.post<{ audioUrl: string }>(
+    API_ENDPOINTS.TTS_GENERATE,
+    payload,
+    { withCredentials: false },
+  );
+  return `${API_ENDPOINTS.TTS_GENERATE.replace("/voicebot-generate-audio", "")}${response.data.audioUrl}?t=${Date.now()}`;
 };
 
 export default function CustomChatShell({ chatbotData, heroImageUrl }: Props) {

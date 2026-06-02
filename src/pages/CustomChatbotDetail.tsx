@@ -20,6 +20,7 @@ import { Organization } from "@/types/organizations";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchChatbotById } from "@/api/chatbot";
 import { useAlert } from "@/hooks/useAlert";
+import axiosInstance from "@/api/axios";
 
 export default function CustomChatbotDetailPage() {
   const navigate = useNavigate();
@@ -48,13 +49,12 @@ export default function CustomChatbotDetailPage() {
 
   const { data: org } = useQuery<Organization>({
     queryKey: ["organization", chatbot?.organization_id],
-    queryFn: () =>
-      fetch(API_ENDPOINTS.ORGANIZATION_DETAIL(chatbot!.organization_id), {
-        credentials: "include",
-      }).then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch organization");
-        return res.json();
-      }),
+    queryFn: async () => {
+      const response = await axiosInstance.get<Organization>(
+        API_ENDPOINTS.ORGANIZATION_DETAIL(chatbot!.organization_id),
+      );
+      return response.data;
+    },
     enabled: !!chatbot?.organization_id,
   });
 
@@ -62,16 +62,11 @@ export default function CustomChatbotDetailPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch(
+      const response = await axiosInstance.post(
         API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_IMAGE(chatbotId),
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
+        formData,
       );
-      if (!response.ok) throw new Error("Upload failed");
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
@@ -80,9 +75,6 @@ export default function CustomChatbotDetailPage() {
       if (fileInputRef.current) fileInputRef.current.value = "";
       addAlert("success", "Hero image uploaded successfully");
     },
-    onError: () => {
-      addAlert("error", "Failed to upload image");
-    },
   });
 
   const togglePublishMutation = useMutation({
@@ -90,12 +82,8 @@ export default function CustomChatbotDetailPage() {
       const path = shouldBePublished
         ? API_ENDPOINTS.CUSTOM_CHATBOT_PUBLISH(chatbotId)
         : API_ENDPOINTS.CUSTOM_CHATBOT_UNPUBLISH(chatbotId);
-      const response = await fetch(path, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to update");
-      return response.json();
+      const response = await axiosInstance.post<CustomChatbot>(path);
+      return response.data;
     },
     onSuccess: (_data: CustomChatbot, shouldBePublished: boolean) => {
       queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
@@ -104,9 +92,6 @@ export default function CustomChatbotDetailPage() {
         shouldBePublished ? "Chatbot published" : "Chatbot unpublished",
       );
     },
-    onError: () => {
-      addAlert("error", "Failed to update publish status");
-    },
   });
 
   const toggleVisibilityMutation = useMutation({
@@ -114,12 +99,8 @@ export default function CustomChatbotDetailPage() {
       const path = shouldBePublic
         ? API_ENDPOINTS.CUSTOM_CHATBOT_PUBLIC(chatbotId)
         : API_ENDPOINTS.CUSTOM_CHATBOT_PRIVATE(chatbotId);
-      const response = await fetch(path, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to update");
-      return response.json();
+      const response = await axiosInstance.post<CustomChatbot>(path);
+      return response.data;
     },
     onSuccess: (_data: CustomChatbot, shouldBePublic: boolean) => {
       queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
@@ -127,9 +108,6 @@ export default function CustomChatbotDetailPage() {
         "success",
         shouldBePublic ? "Chatbot is public now" : "Chatbot is private now",
       );
-    },
-    onError: () => {
-      addAlert("error", "Failed to update publish visibility");
     },
   });
 
@@ -177,24 +155,16 @@ export default function CustomChatbotDetailPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const response = await fetch(
+      const response = await axiosInstance.post(
         API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_FILE(chatbotId),
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
+        formData,
       );
-      if (!response.ok) throw new Error("Upload failed");
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       setSelectedDoc(null);
       if (docInputRef.current) docInputRef.current.value = "";
       addAlert("success", "File uploaded successfully");
-    },
-    onError: () => {
-      addAlert("error", "Failed to upload file");
     },
   });
 
