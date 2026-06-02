@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   Box,
@@ -14,76 +14,124 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
 import { API_ENDPOINTS } from "@/utils/api";
-import { useAlert } from "@/contexts/AlertContext";
 import { CustomChatbot } from "@/types/custom-chatbot";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchChatbotById } from "@/api/chatbot";
+import { useAlert } from "@/hooks/useAlert";
 
 export default function CustomChatbotDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const chatbotId = Number(id);
   const { addAlert } = useAlert();
+  const queryClient = useQueryClient();
 
-  const [chatbot, setChatbot] = useState<CustomChatbot | null>(null);
-  const [org, setOrg] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<File | null>(null);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [togglingPublish, setTogglingPublish] = useState(false);
-  const [togglingVisibility, setTogglingVisibility] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
-
-  const fetchOrganization = useCallback(
-    async (orgId: number) => {
-      setLoading(true);
-      try {
-        const response = await fetch(API_ENDPOINTS.ORGANIZATION_DETAIL(orgId), {
-          credentials: "include",
-        });
-        if (!response.ok) throw new Error("Failed to fetch organization");
-        const data: Organization = await response.json();
-        setOrg(data);
-      } catch {
-        addAlert("error", "Failed to load organiazation details");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [addAlert],
-  );
-
-  const fetchChatbot = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        API_ENDPOINTS.CUSTOM_CHATBOT_DETAIL(chatbotId),
-        { credentials: "include" },
-      );
-      if (!response.ok) throw new Error("Failed to fetch chatbot");
-      const data: CustomChatbot = await response.json();
-      setChatbot(data);
-      if (chatbot?.organization_id) fetchOrganization(chatbot.organization_id);
-    } catch {
-      addAlert("error", "Failed to load chatbot details");
-    } finally {
-      setLoading(false);
-    }
-  }, [chatbotId, addAlert, chatbot?.organization_id, fetchOrganization]);
-
-  useEffect(() => {
-    fetchChatbot();
-  }, [fetchChatbot]);
 
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
     };
   }, [preview]);
+
+  const { data: chatbot, isLoading } = useQuery<CustomChatbot>({
+    queryKey: ["chatbot", id],
+    queryFn: () => fetchChatbotById(chatbotId),
+    enabled: !!id,
+  });
+
+  const { data: org } = useQuery<Organization>({
+    queryKey: ["organization", chatbot?.organization_id],
+    queryFn: () =>
+      fetch(API_ENDPOINTS.ORGANIZATION_DETAIL(chatbot!.organization_id), {
+        credentials: "include",
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch organization");
+        return res.json();
+      }),
+    enabled: !!chatbot?.organization_id,
+  });
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(
+        API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_IMAGE(chatbotId),
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        },
+      );
+      if (!response.ok) throw new Error("Upload failed");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
+      setSelectedFile(null);
+      setPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      addAlert("success", "Hero image uploaded successfully");
+    },
+    onError: () => {
+      addAlert("error", "Failed to upload image");
+    },
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: async (shouldBePublished: boolean) => {
+      const path = shouldBePublished
+        ? API_ENDPOINTS.CUSTOM_CHATBOT_PUBLISH(chatbotId)
+        : API_ENDPOINTS.CUSTOM_CHATBOT_UNPUBLISH(chatbotId);
+      const response = await fetch(path, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to update");
+      return response.json();
+    },
+    onSuccess: (_data: CustomChatbot, shouldBePublished: boolean) => {
+      queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
+      addAlert(
+        "success",
+        shouldBePublished ? "Chatbot published" : "Chatbot unpublished",
+      );
+    },
+    onError: () => {
+      addAlert("error", "Failed to update publish status");
+    },
+  });
+
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async (shouldBePublic: boolean) => {
+      const path = shouldBePublic
+        ? API_ENDPOINTS.CUSTOM_CHATBOT_PUBLIC(chatbotId)
+        : API_ENDPOINTS.CUSTOM_CHATBOT_PRIVATE(chatbotId);
+      const response = await fetch(path, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to update");
+      return response.json();
+    },
+    onSuccess: (_data: CustomChatbot, shouldBePublic: boolean) => {
+      queryClient.invalidateQueries({ queryKey: ["chatbot", id] });
+      addAlert(
+        "success",
+        shouldBePublic ? "Chatbot is public now" : "Chatbot is private now",
+      );
+    },
+    onError: () => {
+      addAlert("error", "Failed to update publish visibility");
+    },
+  });
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -101,32 +149,9 @@ export default function CustomChatbotDetailPage() {
     setPreview(URL.createObjectURL(file));
   };
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (!selectedFile) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      const response = await fetch(
-        API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_IMAGE(chatbotId),
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        },
-      );
-      if (!response.ok) throw new Error("Upload failed");
-      const updated: CustomChatbot = await response.json();
-      setChatbot(updated);
-      setSelectedFile(null);
-      setPreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      addAlert("success", "Hero image uploaded successfully");
-    } catch {
-      addAlert("error", "Failed to upload image");
-    } finally {
-      setUploading(false);
-    }
+    uploadImageMutation.mutate(selectedFile);
   };
 
   const heroImageSrc = chatbot?.hero_image
@@ -148,12 +173,10 @@ export default function CustomChatbotDetailPage() {
     setSelectedDoc(file);
   };
 
-  const handleDocUpload = async () => {
-    if (!selectedDoc) return;
-    setUploadingDoc(true);
-    try {
+  const uploadDocMutation = useMutation({
+    mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append("file", selectedDoc);
+      formData.append("file", file);
       const response = await fetch(
         API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_FILE(chatbotId),
         {
@@ -163,69 +186,24 @@ export default function CustomChatbotDetailPage() {
         },
       );
       if (!response.ok) throw new Error("Upload failed");
+      return response.json();
+    },
+    onSuccess: () => {
       setSelectedDoc(null);
       if (docInputRef.current) docInputRef.current.value = "";
       addAlert("success", "File uploaded successfully");
-    } catch {
+    },
+    onError: () => {
       addAlert("error", "Failed to upload file");
-    } finally {
-      setUploadingDoc(false);
-    }
+    },
+  });
+
+  const handleDocUpload = () => {
+    if (!selectedDoc) return;
+    uploadDocMutation.mutate(selectedDoc);
   };
 
-  const handleTogglePublish = async () => {
-    setTogglingPublish(true);
-    try {
-      const path =
-        chatbot && chatbot.is_publish
-          ? API_ENDPOINTS.CUSTOM_CHATBOT_UNPUBLISH(chatbotId)
-          : API_ENDPOINTS.CUSTOM_CHATBOT_PUBLISH(chatbotId);
-
-      const response = await fetch(path, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to update");
-      const updated: CustomChatbot = await response.json();
-      setChatbot(updated);
-      addAlert(
-        "success",
-        updated.is_publish ? "Chatbot published" : "Chatbot unpublished",
-      );
-    } catch {
-      addAlert("error", "Failed to update publish status");
-    } finally {
-      setTogglingPublish(false);
-    }
-  };
-
-  const handleToggleVisibility = async () => {
-    setTogglingVisibility(true);
-    try {
-      const path =
-        chatbot && chatbot.is_public
-          ? API_ENDPOINTS.CUSTOM_CHATBOT_PRIVATE(chatbotId)
-          : API_ENDPOINTS.CUSTOM_CHATBOT_PUBLIC(chatbotId);
-
-      const response = await fetch(path, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to update");
-      const updated: CustomChatbot = await response.json();
-      setChatbot(updated);
-      addAlert(
-        "success",
-        updated.is_public ? "Chatbot is public now" : "Chatbot is private now",
-      );
-    } catch {
-      addAlert("error", "Failed to update publish visibility");
-    } finally {
-      setTogglingVisibility(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
         <CircularProgress />
@@ -324,12 +302,14 @@ export default function CustomChatbotDetailPage() {
                 />
                 <ColorBgButton
                   size="small"
-                  onClick={handleTogglePublish}
-                  disabled={togglingPublish}
+                  onClick={() =>
+                    togglePublishMutation.mutate(!chatbot.is_publish)
+                  }
+                  disabled={togglePublishMutation.isPending}
                   variant="outlined"
                   sx={{ ml: 1 }}
                 >
-                  {togglingPublish
+                  {togglePublishMutation.isPending
                     ? "Updating..."
                     : chatbot.is_publish
                       ? "Unpublish"
@@ -352,12 +332,14 @@ export default function CustomChatbotDetailPage() {
                 />
                 <ColorBgButton
                   size="small"
-                  onClick={handleToggleVisibility}
-                  disabled={togglingVisibility}
+                  onClick={() =>
+                    toggleVisibilityMutation.mutate(!chatbot.is_public)
+                  }
+                  disabled={toggleVisibilityMutation.isPending}
                   variant="outlined"
                   sx={{ ml: 1 }}
                 >
-                  {togglingVisibility
+                  {toggleVisibilityMutation.isPending
                     ? "Updating..."
                     : !chatbot.is_public
                       ? "Make Public"
@@ -431,7 +413,7 @@ export default function CustomChatbotDetailPage() {
                 <ColorBgButton
                   startIcon={<CloudUploadIcon />}
                   onClick={handleFileSelect}
-                  disabled={uploading}
+                  disabled={uploadImageMutation.isPending}
                   variant="outlined"
                 >
                   Select Image
@@ -439,11 +421,11 @@ export default function CustomChatbotDetailPage() {
                 {selectedFile && (
                   <ColorBgButton
                     onClick={handleUpload}
-                    disabled={uploading}
+                    disabled={uploadImageMutation.isPending}
                     variant="contained"
                     color="primary"
                   >
-                    {uploading ? "Uploading..." : "Upload"}
+                    {uploadImageMutation.isPending ? "Uploading..." : "Upload"}
                   </ColorBgButton>
                 )}
               </Stack>
@@ -495,7 +477,7 @@ export default function CustomChatbotDetailPage() {
                 <ColorBgButton
                   startIcon={<CloudUploadIcon />}
                   onClick={handleDocSelect}
-                  disabled={uploadingDoc}
+                  disabled={uploadDocMutation.isPending}
                   variant="outlined"
                 >
                   Select File
@@ -503,11 +485,11 @@ export default function CustomChatbotDetailPage() {
                 {selectedDoc && (
                   <ColorBgButton
                     onClick={handleDocUpload}
-                    disabled={uploadingDoc}
+                    disabled={uploadDocMutation.isPending}
                     variant="contained"
                     color="primary"
                   >
-                    {uploadingDoc ? "Uploading..." : "Upload"}
+                    {uploadDocMutation.isPending ? "Uploading..." : "Upload"}
                   </ColorBgButton>
                 )}
               </Stack>

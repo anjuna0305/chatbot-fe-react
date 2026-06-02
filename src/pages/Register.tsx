@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router";
-import { useAlert } from "@/contexts/AlertContext";
 import { RegisterRequest } from "@/types/auth";
 import { API_ENDPOINTS, parseErrorMessage } from "@/utils/api";
+import { useAlert } from "@/hooks/useAlert";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),

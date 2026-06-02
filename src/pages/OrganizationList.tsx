@@ -25,9 +25,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
 import { API_ENDPOINTS, parseErrorMessage } from "@/utils/api";
-import { useAlert } from "@/contexts/AlertContext";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
+import { useAlert } from "@/hooks/useAlert";
 
 type FormErrors = {
   name?: string;
@@ -177,9 +177,7 @@ export default function OrganizationsPage() {
                     key={org.id}
                     hover
                     sx={{ cursor: "pointer" }}
-                    onClick={() =>
-                      navigate(`/admin/organizations/${org.id}`)
-                    }
+                    onClick={() => navigate(`/admin/organizations/${org.id}`)}
                   >
                     <TableCell>{org.name}</TableCell>
                     <TableCell>

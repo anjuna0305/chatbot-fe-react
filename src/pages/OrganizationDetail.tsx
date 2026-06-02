@@ -12,9 +12,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
 import { API_ENDPOINTS } from "@/utils/api";
-import { useAlert } from "@/contexts/AlertContext";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
+import { useAlert } from "@/hooks/useAlert";
 
 export default function OrganizationDetailPage() {
   const navigate = useNavigate();

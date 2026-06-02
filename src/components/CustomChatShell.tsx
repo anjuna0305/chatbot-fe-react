@@ -1,4 +1,3 @@
-
 import { Box, IconButton, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import MicIcon from "@mui/icons-material/Mic";
@@ -12,6 +11,7 @@ import AudioWaveform, { AudioWaveformHandle } from "./AudioWaveForm";
 import { API_ENDPOINTS } from "@/utils/api";
 import { CustomChatbot } from "@/types/custom-chatbot";
 import { reencodeAudio } from "@/utils/audio";
+import axiosInstance from "@/api/axios";
 
 interface Props {
   chatbotData: CustomChatbot;
@@ -20,21 +20,19 @@ interface Props {
 
 type RecordingState = "idle" | "recording" | "processing";
 
+type SendMessageResponse = {
+  response: string;
+};
+
 const sendCustomMessage = async (
   message: string,
   retrievalKey: string,
 ): Promise<string> => {
-  const response = await fetch(API_ENDPOINTS.CUSTOM_CHATBOT_API(retrievalKey), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ message }),
-  });
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.response as string;
+  const res = await axiosInstance.post<SendMessageResponse>(
+    API_ENDPOINTS.CUSTOM_CHATBOT_API(retrievalKey),
+    { message },
+  );
+  return res.data.response;
 };
 
 const transcribeAudio = async (audioBlob: Blob): Promise<string> => {

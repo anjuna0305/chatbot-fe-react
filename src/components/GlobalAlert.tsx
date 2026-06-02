@@ -1,6 +1,5 @@
-
-import { Alert, AlertColor, Box, Collapse, Snackbar } from "@mui/material";
-import { useAlert } from "@/contexts/AlertContext";
+import { useAlert } from "@/hooks/useAlert";
+import { Alert, AlertColor, Box, Collapse } from "@mui/material";
 
 export default function GlobalAlert() {
   const { alerts, dismissAlert } = useAlert();

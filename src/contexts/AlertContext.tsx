@@ -1,11 +1,5 @@
-
-import React, {
-  createContext,
-  useContext,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { AlertContext } from "@/hooks/useAlert";
+import React, { useCallback, useMemo, useState } from "react";
 
 export type AppAlert = {
   id: string;
@@ -13,7 +7,7 @@ export type AppAlert = {
   message: string;
 };
 
-type AlertContextType = {
+export type AlertContextType = {
   alerts: AppAlert[];
   addAlert: (
     severity: AppAlert["severity"],
@@ -22,8 +16,6 @@ type AlertContextType = {
   ) => void;
   dismissAlert: (id: string) => void;
 };
-
-const AlertContext = createContext<AlertContextType | null>(null);
 
 let alertCounter = 0;
 
@@ -61,12 +53,4 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   return (
     <AlertContext.Provider value={value}>{children}</AlertContext.Provider>
   );
-}
-
-export function useAlert(): AlertContextType {
-  const context = useContext(AlertContext);
-  if (!context) {
-    throw new Error("useAlert must be used within an AlertProvider");
-  }
-  return context;
 }

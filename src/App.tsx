@@ -18,68 +18,73 @@ import CustomChatbotListPage from "./pages/CustomChatbotList";
 import CustomChatbotDetailPage from "./pages/CustomChatbotDetail";
 import OrganizationListPage from "./pages/OrganizationList";
 import OrganizationDetailPage from "./pages/OrganizationDetail";
+import { AlertProvider } from "./contexts/AlertContext";
+import GlobalAlert from "./components/GlobalAlert";
 
 function App() {
   return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route element={<AppLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="p">
-            {/*<Route path="chatbot" element={<ChatPage />} />*/}
-            <Route path="asr" element={<AsrPage />} />
-            <Route path="tts" element={<TtsPage />} />
-            <Route path="gov-chatbot" element={<GovChatbotPage />} />
-            <Route path="make-chatbot" element={<MakeChatbotPage />} />
-            <Route path="voice-stream" element={<VoiceStreamPage />} />
-            <Route path=":url_path" element={<CustomChatbotPage />} />
+    <AlertProvider>
+      <GlobalAlert />
+      <Routes>
+        <Route element={<RootLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route element={<AppLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="p">
+              {/*<Route path="chatbot" element={<ChatPage />} />*/}
+              <Route path="asr" element={<AsrPage />} />
+              <Route path="tts" element={<TtsPage />} />
+              <Route path="gov-chatbot" element={<GovChatbotPage />} />
+              <Route path="make-chatbot" element={<MakeChatbotPage />} />
+              <Route path="voice-stream" element={<VoiceStreamPage />} />
+              <Route path=":url_path" element={<CustomChatbotPage />} />
+            </Route>
+            <Route
+              path="admin"
+              element={
+                <AdminGuard>
+                  <AdminDashboardPage />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="admin/custom-chatbot"
+              element={
+                <AdminGuard>
+                  <CustomChatbotListPage />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="admin/custom-chatbot/:id"
+              element={
+                <AdminGuard>
+                  <CustomChatbotDetailPage />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="admin/organizations"
+              element={
+                <AdminGuard>
+                  <OrganizationListPage />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="admin/organizations/:id"
+              element={
+                <AdminGuard>
+                  <OrganizationDetailPage />
+                </AdminGuard>
+              }
+            />
           </Route>
-          <Route
-            path="admin"
-            element={
-              <AdminGuard>
-                <AdminDashboardPage />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="admin/custom-chatbot"
-            element={
-              <AdminGuard>
-                <CustomChatbotListPage />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="admin/custom-chatbot/:id"
-            element={
-              <AdminGuard>
-                <CustomChatbotDetailPage />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="admin/organizations"
-            element={
-              <AdminGuard>
-                <OrganizationListPage />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="admin/organizations/:id"
-            element={
-              <AdminGuard>
-                <OrganizationDetailPage />
-              </AdminGuard>
-            }
-          />
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </AlertProvider>
   );
 }
 

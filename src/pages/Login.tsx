@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAlert } from "@/contexts/AlertContext";
+import { useAlert } from "@/hooks/useAlert";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),

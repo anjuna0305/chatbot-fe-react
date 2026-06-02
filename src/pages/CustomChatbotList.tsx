@@ -28,10 +28,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
 import { API_ENDPOINTS } from "@/utils/api";
-import { useAlert } from "@/contexts/AlertContext";
 import { CustomChatbot } from "@/types/custom-chatbot";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
+import { useAlert } from "@/hooks/useAlert";
 
 type FormErrors = {
   chatbot_name?: string;
