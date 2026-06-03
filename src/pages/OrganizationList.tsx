@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -24,11 +24,11 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
-import { API_ENDPOINTS } from "@/utils/api";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
-import axiosInstance from "@/api/axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchOrganizations, createOrganization } from "@/api/organization";
 
 type FormErrors = {
   name?: string;
@@ -40,31 +40,28 @@ const INITIAL_FORM = {
 
 export default function OrganizationsPage() {
   const navigate = useNavigate();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const { addAlert } = useAlert();
 
-  const fetchOrganizations = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get<Organization[]>(
-        API_ENDPOINTS.ORGANIZATION_LIST,
-      );
-      setOrganizations(response.data);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: organizations = [], isLoading } = useQuery<Organization[]>({
+    queryKey: ["organizations"],
+    queryFn: fetchOrganizations,
+  });
 
-  useEffect(() => {
-    fetchOrganizations();
-  }, [fetchOrganizations]);
+  const createMutation = useMutation({
+    mutationFn: createOrganization,
+    onSuccess: (data: Organization) => {
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      addAlert("success", "Organization created successfully");
+      setDialogOpen(false);
+      setForm(INITIAL_FORM);
+      setErrors({});
+      navigate(`organizations/${data.id}`);
+    },
+  });
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -74,35 +71,16 @@ export default function OrganizationsPage() {
     return errs;
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    setSubmitting(true);
-    try {
-      const response = await axiosInstance.post<Organization>(
-        API_ENDPOINTS.ORGANIZATION_LIST,
-        {
-          name: form.name.trim(),
-          is_active: false,
-        },
-      );
-
-      addAlert("success", "Organization created successfully");
-      setDialogOpen(false);
-      setForm(INITIAL_FORM);
-      setErrors({});
-      navigate(`organizations/${response.data.id}`);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setSubmitting(false);
-    }
+    createMutation.mutate(form.name.trim());
   }
 
   function handleCloseDialog() {
-    if (submitting) return;
+    if (createMutation.isPending) return;
     setDialogOpen(false);
     setForm(INITIAL_FORM);
     setErrors({});
@@ -120,13 +98,17 @@ export default function OrganizationsPage() {
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            Custom chat bots
+            Organizations
           </Typography>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <ColorBgIconButton
               tooltip="Refresh"
               size="small"
-              onClick={fetchOrganizations}
+              onClick={() =>
+                queryClient.invalidateQueries({
+                  queryKey: ["organizations"],
+                })
+              }
               color="primary"
             >
               <RefreshIcon fontSize="small" />
@@ -140,7 +122,7 @@ export default function OrganizationsPage() {
           </Box>
         </Box>
 
-        {loading ? (
+        {isLoading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
           </Box>
@@ -207,16 +189,16 @@ export default function OrganizationsPage() {
             <ColorBgButton
               variant="outlined"
               onClick={handleCloseDialog}
-              disabled={submitting}
+              disabled={createMutation.isPending}
             >
               Cancel
             </ColorBgButton>
             <ColorBgButton
               variant="contained"
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={createMutation.isPending}
             >
-              {submitting ? "Creating..." : "Create"}
+              {createMutation.isPending ? "Creating..." : "Create"}
             </ColorBgButton>
           </DialogActions>
         </Dialog>

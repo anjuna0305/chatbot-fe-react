@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -27,12 +27,13 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
-import { API_ENDPOINTS } from "@/utils/api";
 import { CustomChatbot } from "@/types/custom-chatbot";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
-import axiosInstance from "@/api/axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchChatbots, createCustomChatbot } from "@/api/chatbot";
+import { fetchOrganizations } from "@/api/organization";
 
 type FormErrors = {
   chatbot_name?: string;
@@ -58,47 +59,35 @@ const INITIAL_FORM: FormState = {
 
 export default function CustomChatbotListPage() {
   const navigate = useNavigate();
-  const [chatbots, setChatbots] = useState<CustomChatbot[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const { addAlert } = useAlert();
 
-  const fetchChatbots = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get<CustomChatbot[]>(
-        API_ENDPOINTS.CUSTOM_CHATBOT_LIST,
-      );
-      setChatbots(response.data);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: chatbots = [], isLoading: loading } = useQuery<CustomChatbot[]>(
+    {
+      queryKey: ["custom-chatbots"],
+      queryFn: fetchChatbots,
+    },
+  );
 
-  const fetchOrganizations = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get<Organization[]>(
-        API_ENDPOINTS.ORGANIZATION_LIST,
-      );
-      setOrganizations(response.data);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: organizations = [] } = useQuery<Organization[]>({
+    queryKey: ["organizations"],
+    queryFn: fetchOrganizations,
+  });
 
-  useEffect(() => {
-    fetchChatbots();
-    fetchOrganizations();
-  }, [fetchChatbots, fetchOrganizations]);
+  const createMutation = useMutation({
+    mutationFn: createCustomChatbot,
+    onSuccess: (data: CustomChatbot) => {
+      queryClient.invalidateQueries({ queryKey: ["custom-chatbots"] });
+      addAlert("success", "Chatbot created successfully");
+      setDialogOpen(false);
+      setForm(INITIAL_FORM);
+      setErrors({});
+      navigate(`${data.id}`);
+    },
+  });
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -116,38 +105,22 @@ export default function CustomChatbotListPage() {
     return errs;
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    setSubmitting(true);
-    try {
-      const response = await axiosInstance.post<CustomChatbot>(
-        API_ENDPOINTS.CUSTOM_CHATBOT_LIST,
-        {
-          chatbot_name: form.chatbot_name.trim(),
-          description: form.description.trim(),
-          url_path: form.url_path.trim(),
-          organization_id: form.organization_id,
-          is_public: "true",
-        },
-      );
-
-      addAlert("success", "Chatbot created successfully");
-      setDialogOpen(false);
-      setForm(INITIAL_FORM);
-      setErrors({});
-      navigate(`custom-chatbot/${response.data.id}`);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setSubmitting(false);
-    }
+    createMutation.mutate({
+      chatbot_name: form.chatbot_name.trim(),
+      description: form.description.trim(),
+      url_path: form.url_path.trim(),
+      organization_id: form.organization_id,
+      is_public: form.is_public,
+    });
   }
 
   function handleCloseDialog() {
-    if (submitting) return;
+    if (createMutation.isPending) return;
     setDialogOpen(false);
     setForm(INITIAL_FORM);
     setErrors({});
@@ -171,7 +144,11 @@ export default function CustomChatbotListPage() {
             <ColorBgIconButton
               tooltip="Refresh"
               size="small"
-              onClick={fetchChatbots}
+              onClick={() =>
+                queryClient.invalidateQueries({
+                  queryKey: ["custom-chatbots"],
+                })
+              }
               color="primary"
             >
               <RefreshIcon fontSize="small" />
@@ -321,16 +298,16 @@ export default function CustomChatbotListPage() {
             <ColorBgButton
               variant="outlined"
               onClick={handleCloseDialog}
-              disabled={submitting}
+              disabled={createMutation.isPending}
             >
               Cancel
             </ColorBgButton>
             <ColorBgButton
               variant="contained"
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={createMutation.isPending}
             >
-              {submitting ? "Creating..." : "Create"}
+              {createMutation.isPending ? "Creating..." : "Create"}
             </ColorBgButton>
           </DialogActions>
         </Dialog>

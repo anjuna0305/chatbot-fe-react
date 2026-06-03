@@ -65,6 +65,11 @@ export default function CustomChatbotDetailPage() {
       const response = await axiosInstance.post(
         API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_IMAGE(chatbotId),
         formData,
+        {
+          headers: {
+            "Content-Type": undefined,
+          },
+        },
       );
       return response.data;
     },
@@ -158,6 +163,11 @@ export default function CustomChatbotDetailPage() {
       const response = await axiosInstance.post(
         API_ENDPOINTS.CUSTOM_CHATBOT_UPLOAD_FILE(chatbotId),
         formData,
+        {
+          headers: {
+            "Content-Type": undefined,
+          },
+        },
       );
       return response.data;
     },
