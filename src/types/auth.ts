@@ -13,5 +13,6 @@ export type RegisterRequest = {
 export type LoginResponse = {
   access_token: string;
   token_type: "bearer";
+  organization_id: string;
   role: string;
 };

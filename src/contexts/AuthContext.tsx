@@ -1,32 +1,31 @@
-
-import React, { createContext, useContext, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { LoginRequest, LoginResponse } from "@/types/auth";
 import { API_ENDPOINTS } from "@/utils/api";
 import axiosInstance from "@/api/axios";
-
-type AuthState = {
-  accessToken: string | null;
-  role: string | null;
-  isAuthenticated: boolean;
-};
-
-type AuthContextType = AuthState & {
-  login: (credentials: LoginRequest) => Promise<void>;
-  logout: () => void;
-};
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext, AuthState } from "./authContext";
 
 const STORAGE_KEY_TOKEN = "subasa_access_token";
 const STORAGE_KEY_ROLE = "subasa_role";
+const STORAGE_ORGANIZATION_ID = "subasa_organization";
 
 function getInitialAuthState(): AuthState {
   const token = localStorage.getItem(STORAGE_KEY_TOKEN);
   const role = localStorage.getItem(STORAGE_KEY_ROLE);
+  const orgId = localStorage.getItem(STORAGE_ORGANIZATION_ID);
   if (token) {
-    return { accessToken: token, role, isAuthenticated: true };
+    return {
+      accessToken: token,
+      role,
+      organization_id: orgId,
+      isAuthenticated: true,
+    };
   }
-  return { accessToken: null, role: null, isAuthenticated: false };
+  return {
+    accessToken: null,
+    role: null,
+    organization_id: null,
+    isAuthenticated: false,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -43,10 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem(STORAGE_KEY_TOKEN, data.access_token);
     localStorage.setItem(STORAGE_KEY_ROLE, data.role);
+    localStorage.setItem(STORAGE_ORGANIZATION_ID, data.role);
 
     setAuthState({
       accessToken: data.access_token,
       role: data.role,
+      organization_id: data.organization_id,
       isAuthenticated: true,
     });
   }, []);
@@ -55,7 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("logout called");
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_ROLE);
-    setAuthState({ accessToken: null, role: null, isAuthenticated: false });
+    setAuthState({
+      accessToken: null,
+      role: null,
+      organization_id: null,
+      isAuthenticated: false,
+    });
   }, []);
 
   const value = useMemo(
@@ -64,24 +70,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
-
-export function isAdmin(role: string | null) {
-  return role === "admin_user";
-}
-
-export function isOrgAdmin(role: string | null) {
-  return role === "org_admin";
-}
-
-export function isOrgUser(role: string | null) {
-  return role === "admin_user";
 }

@@ -1,6 +1,7 @@
 import SideBar from "@/components/Sidebar";
 import { Box } from "@mui/material";
-import { isAdmin, useAuth } from "@/contexts/AuthContext";
+import { isAdmin } from "@/utils/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { Service } from "@/types/service";
 import { Outlet } from "react-router";
 

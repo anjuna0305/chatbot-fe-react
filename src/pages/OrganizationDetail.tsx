@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   Box,
@@ -11,64 +10,41 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ColorBgButton from "@/components/ColorBgButton";
 import ColorBgIconButton from "@/components/ColorBgIconButton";
-import { API_ENDPOINTS } from "@/utils/api";
 import AdminGuard from "@/components/AdminGuard";
 import { Organization } from "@/types/organizations";
 import { useAlert } from "@/hooks/useAlert";
-import axiosInstance from "@/api/axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchOrganizationById,
+  toggleOrganizationActive,
+} from "@/api/organization";
 
 export default function OrganizationDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const orgId = Number(id);
+  const orgId = String(id);
   const { addAlert } = useAlert();
+  const queryClient = useQueryClient();
 
-  const [org, setOrg] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [togglingActive, setTogglingActive] = useState(false);
+  const { data: org, isLoading } = useQuery<Organization>({
+    queryKey: ["organization", orgId],
+    queryFn: () => fetchOrganizationById(orgId),
+    enabled: !!orgId,
+  });
 
-  const fetchOrganization = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get<Organization>(
-        API_ENDPOINTS.ORGANIZATION_DETAIL(orgId),
-      );
-      setOrg(response.data);
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId]);
-
-  useEffect(() => {
-    fetchOrganization();
-  }, [fetchOrganization]);
-
-  const handleToggleActivate = async () => {
-    setTogglingActive(true);
-    try {
-      const path =
-        org && org.is_active
-          ? API_ENDPOINTS.ORGANIZATION_DEACTIVATE(orgId)
-          : API_ENDPOINTS.ORGANIZATION_ACTIVATE(orgId);
-
-      const response = await axiosInstance.put<Organization>(path);
-      setOrg(response.data);
+  const toggleMutation = useMutation({
+    mutationFn: toggleOrganizationActive,
+    onSuccess: (data: Organization) => {
+      queryClient.invalidateQueries({ queryKey: ["organization", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
       addAlert(
         "success",
-        response.data.is_active
-          ? "Organization activated"
-          : "Organization deactivated",
+        data.is_active ? "Organization activated" : "Organization deactivated",
       );
-    } catch {
-      // Error alert handled by axios interceptor
-    } finally {
-      setTogglingActive(false);
-    }
-  };
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
         <CircularProgress />
@@ -125,13 +101,15 @@ export default function OrganizationDetailPage() {
                 />
                 <ColorBgButton
                   size="small"
-                  onClick={handleToggleActivate}
-                  disabled={togglingActive}
+                  onClick={() =>
+                    toggleMutation.mutate({ id: orgId, isActive: org.is_active })
+                  }
+                  disabled={toggleMutation.isPending}
                   variant="contained"
                   color={org?.is_active ? "warning" : "success"}
                   sx={{ ml: 1 }}
                 >
-                  {togglingActive
+                  {toggleMutation.isPending
                     ? "Updating..."
                     : org?.is_active
                       ? "deactivate"

@@ -2,7 +2,7 @@ export type CustomChatbot = {
   id: number;
   chatbot_name: string;
   file_path: string;
-  organization_id: number;
+  organization_id: string;
   description: string;
   hero_image: string;
   url_path: string;

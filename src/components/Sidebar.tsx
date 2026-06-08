@@ -25,7 +25,8 @@ import StreamIcon from "@mui/icons-material/Stream";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import { Service } from "@/types/service";
-import { isAdmin, useAuth } from "@/contexts/AuthContext";
+import { isAdmin } from "@/utils/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 const drawerWidth = 240;
 

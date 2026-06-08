@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
-import { isOrgAdmin } from "@/contexts/AuthContext";
+import { isOrgAdmin } from "@/utils/auth";
 
 export default function AboutPage() {
   const [count, setCount] = useState(0);

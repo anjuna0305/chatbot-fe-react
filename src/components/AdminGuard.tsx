@@ -1,4 +1,5 @@
-import { isAdmin, useAuth } from "@/contexts/AuthContext";
+import { isAdmin } from "@/utils/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router";
 import { useEffect, useRef } from "react";
 
