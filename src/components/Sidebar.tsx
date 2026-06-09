@@ -24,8 +24,9 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import StreamIcon from "@mui/icons-material/Stream";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import PeopleIcon from "@mui/icons-material/People";
 import { Service } from "@/types/service";
-import { isAdmin } from "@/utils/auth";
+import { isAdmin, isOrgAdmin } from "@/utils/auth";
 import { useAuth } from "@/hooks/useAuth";
 
 const drawerWidth = 240;
@@ -93,6 +94,7 @@ const serviceIconMap: Record<string, React.ReactElement> = {
   "voice-stream": <StreamIcon />,
   "admin-dashboard": <DashboardIcon />,
   "admin-custom-chatbot": <ListAltIcon />,
+  "admin-users": <PeopleIcon />,
 };
 
 interface SideBarProps {
@@ -107,7 +109,7 @@ export default function SideBar({ services }: SideBarProps) {
   const pathname = location.pathname;
   const { role, logout, isAuthenticated } = useAuth();
 
-  const open = isAdmin(role) ? true : !collapsed;
+  const open = isAdmin(role) || isOrgAdmin(role) ? true : !collapsed;
 
   const handleToggle = () => {
     setCollapsed(!collapsed);
@@ -121,7 +123,7 @@ export default function SideBar({ services }: SideBarProps) {
   return (
     <Box sx={{ display: "flex" }}>
       <Drawer variant="permanent" open={open}>
-        {isAdmin(role) ? (
+        {isAdmin(role) || isOrgAdmin(role) ? (
           <DrawerHeader>
             <Box
               sx={{

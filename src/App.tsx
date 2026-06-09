@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router";
 import RootLayout from "./RootLayout";
 import AppLayout from "./AppLayout";
 import AdminGuard from "./components/AdminGuard";
+import AuthGuard from "./components/AuthGuard";
+import { isAdmin, isOrgAdmin } from "./utils/auth";
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
 // import ChatPage from "./pages/Chat";
@@ -18,6 +20,8 @@ import CustomChatbotListPage from "./pages/CustomChatbotList";
 import CustomChatbotDetailPage from "./pages/CustomChatbotDetail";
 import OrganizationListPage from "./pages/OrganizationList";
 import OrganizationDetailPage from "./pages/OrganizationDetail";
+import UserListPage from "./pages/UserList";
+import UserDetailPage from "./pages/UserDetail";
 import { AlertProvider } from "./contexts/AlertContext";
 import GlobalAlert from "./components/GlobalAlert";
 
@@ -79,6 +83,22 @@ function App() {
                 <AdminGuard>
                   <OrganizationDetailPage />
                 </AdminGuard>
+              }
+            />
+            <Route
+              path="admin/users"
+              element={
+                <AuthGuard roleValidators={[isAdmin, isOrgAdmin]}>
+                  <UserListPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="admin/users/:id"
+              element={
+                <AuthGuard roleValidators={[isAdmin, isOrgAdmin]}>
+                  <UserDetailPage />
+                </AuthGuard>
               }
             />
           </Route>

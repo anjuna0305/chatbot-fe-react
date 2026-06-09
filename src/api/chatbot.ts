@@ -7,6 +7,11 @@ export const fetchChatbotById = async (id: number): Promise<CustomChatbot> => {
   return res.data;
 };
 
+export const fetchChatbotByUrlPath = async (urlPath: string): Promise<CustomChatbot> => {
+  const res = await axiosInstance.get(API_ENDPOINTS.CUSTOM_CHATBOT_BY_URL(urlPath));
+  return res.data;
+};
+
 export const fetchChatbots = async (): Promise<CustomChatbot[]> => {
   const response = await axiosInstance.get<CustomChatbot[]>(
     API_ENDPOINTS.CUSTOM_CHATBOT_LIST,

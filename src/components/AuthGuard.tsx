@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router";
 import { ReactNode, useEffect, useRef } from "react";
 
 interface Props {
-  roleValidators?: [(role: string) => boolean];
+  roleValidators?: ((role: string) => boolean)[];
   children: ReactNode;
 }
 

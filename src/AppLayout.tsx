@@ -1,6 +1,6 @@
 import SideBar from "@/components/Sidebar";
 import { Box } from "@mui/material";
-import { isAdmin } from "@/utils/auth";
+import { isAdmin, isOrgAdmin } from "@/utils/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { Service } from "@/types/service";
 import { Outlet } from "react-router";
@@ -65,13 +65,37 @@ const adminServices: Service[] = [
     serviceCodeName: "organization",
     path: "/admin/organizations",
   },
+  {
+    id: 104,
+    serviceDisplayName: "Users",
+    serviceCodeName: "admin-users",
+    path: "/admin/users",
+  },
+];
+
+const orgAdminServices: Service[] = [
+  ...publicServices,
+  {
+    id: 104,
+    serviceDisplayName: "Users",
+    serviceCodeName: "admin-users",
+    path: "/admin/users",
+  },
 ];
 
 export default function AppLayout() {
   const { role } = useAuth();
 
   const admin = isAdmin(role);
-  const services = admin ? adminServices : publicServices;
+  const orgAdmin = isOrgAdmin(role);
+  let services: Service[];
+  if (admin) {
+    services = adminServices;
+  } else if (orgAdmin) {
+    services = orgAdminServices;
+  } else {
+    services = publicServices;
+  }
 
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
