@@ -8,7 +8,7 @@ export type FetchUsersParams = {
   search?: string;
   sort_by?: "name" | "created_at";
   sort_order?: "asc" | "desc";
-  organization_id?: number;
+  organization_uuid?: string;
   is_active?: boolean;
 };
 
@@ -26,14 +26,14 @@ export async function fetchUserById(id: string): Promise<User> {
 
 export async function changeUserOrganization({
   userId,
-  organizationId,
+  organizationUuid,
 }: {
   userId: string;
-  organizationId: number;
+  organizationUuid: string;
 }): Promise<User> {
   const res = await axiosInstance.put(
     API_ENDPOINTS.USER_CHANGE_ORG(userId),
-    { organization_id: String(organizationId) },
+    { organization_uuid: organizationUuid },
   );
   return res.data;
 }

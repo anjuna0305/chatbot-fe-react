@@ -219,7 +219,7 @@ export default function UserDetailPage() {
                   }}
                   getOptionLabel={(option) => option.name}
                   isOptionEqualToValue={(option, value) =>
-                    option.id === value.id
+                    option.uuid === value.uuid
                   }
                   sx={{ minWidth: 300 }}
                   renderInput={(params) => (
@@ -232,7 +232,7 @@ export default function UserDetailPage() {
                     if (selectedOrg) {
                       changeOrgMutation.mutate({
                         userId,
-                        organizationId: selectedOrg.id,
+                        organizationUuid: selectedOrg.uuid,
                       });
                     }
                   }}

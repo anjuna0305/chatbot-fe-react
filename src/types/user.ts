@@ -1,11 +1,11 @@
 export type User = {
-  id: number;
+  uuid: string;
   name: string;
   email: string;
   role: string;
   created_at: string;
   is_active: boolean;
-  organization_id: number;
+  organization_uuid: string | null;
   organization_name: string;
 };
 

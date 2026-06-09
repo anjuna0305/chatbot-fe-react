@@ -6,24 +6,24 @@ import { AuthContext, AuthState } from "./authContext";
 
 const STORAGE_KEY_TOKEN = "subasa_access_token";
 const STORAGE_KEY_ROLE = "subasa_role";
-const STORAGE_ORGANIZATION_ID = "subasa_organization";
+const STORAGE_ORGANIZATION_UUID = "subasa_organization";
 
 function getInitialAuthState(): AuthState {
   const token = localStorage.getItem(STORAGE_KEY_TOKEN);
   const role = localStorage.getItem(STORAGE_KEY_ROLE);
-  const orgId = localStorage.getItem(STORAGE_ORGANIZATION_ID);
+  const orgUuid = localStorage.getItem(STORAGE_ORGANIZATION_UUID);
   if (token) {
     return {
       accessToken: token,
       role,
-      organization_id: orgId,
+      organization_uuid: orgUuid,
       isAuthenticated: true,
     };
   }
   return {
     accessToken: null,
     role: null,
-    organization_id: null,
+    organization_uuid: null,
     isAuthenticated: false,
   };
 }
@@ -42,12 +42,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem(STORAGE_KEY_TOKEN, data.access_token);
     localStorage.setItem(STORAGE_KEY_ROLE, data.role);
-    localStorage.setItem(STORAGE_ORGANIZATION_ID, data.role);
+    localStorage.setItem(STORAGE_ORGANIZATION_UUID, data.organization_uuid);
 
     setAuthState({
       accessToken: data.access_token,
       role: data.role,
-      organization_id: data.organization_id,
+      organization_uuid: data.organization_uuid,
       isAuthenticated: true,
     });
   }, []);
@@ -56,10 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("logout called");
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_ROLE);
+    localStorage.removeItem(STORAGE_ORGANIZATION_UUID);
     setAuthState({
       accessToken: null,
       role: null,
-      organization_id: null,
+      organization_uuid: null,
       isAuthenticated: false,
     });
   }, []);

@@ -54,7 +54,7 @@ export default function UserListPage() {
   const [searchInput, setSearchInput] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "created_at">("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [orgFilter, setOrgFilter] = useState<number | "">("");
+  const [orgFilter, setOrgFilter] = useState<string | "">("");
   const [activeFilter, setActiveFilter] = useState<"" | "true" | "false">("");
 
   const isGeneralAdmin = isAdmin(role);
@@ -66,7 +66,7 @@ export default function UserListPage() {
     sort_by: sortBy,
     sort_order: sortOrder,
     ...(isGeneralAdmin && orgFilter !== ""
-      ? { organization_id: orgFilter }
+      ? { organization_uuid: orgFilter }
       : {}),
     ...(activeFilter !== "" ? { is_active: activeFilter === "true" } : {}),
   };
@@ -224,13 +224,13 @@ export default function UserListPage() {
                 value={orgFilter}
                 label="Organization"
                 onChange={(e) => {
-                  setOrgFilter(e.target.value as number | "");
+                  setOrgFilter(e.target.value as string | "");
                   setPage(0);
                 }}
               >
                 <MenuItem value="">All</MenuItem>
                 {organizations.map((org) => (
-                  <MenuItem key={org.id} value={org.id}>
+                  <MenuItem key={org.uuid} value={org.uuid}>
                     {org.name}
                   </MenuItem>
                 ))}
@@ -261,10 +261,10 @@ export default function UserListPage() {
                 <TableBody>
                   {usersData?.items.map((user) => (
                     <TableRow
-                      key={user.id}
+                      key={user.uuid}
                       hover
                       sx={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/admin/users/${user.id}`)}
+                      onClick={() => navigate(`/admin/users/${user.uuid}`)}
                     >
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>

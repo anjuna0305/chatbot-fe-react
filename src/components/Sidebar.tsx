@@ -179,7 +179,7 @@ export default function SideBar({ services }: SideBarProps) {
             <List>
               {services.map((service) => (
                 <ListItem
-                  key={service.id}
+                  key={service.uuid}
                   disablePadding
                   sx={{ display: "block" }}
                 >

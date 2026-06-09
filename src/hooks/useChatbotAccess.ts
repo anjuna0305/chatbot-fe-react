@@ -12,11 +12,11 @@ export function useChatbotAccess(
   chatbot: CustomChatbot,
   {
     role,
-    organization_id,
+    organization_uuid,
     isAuthenticated,
   }: {
     role: string | null;
-    organization_id: string | null;
+    organization_uuid: string | null;
     isAuthenticated: boolean;
   },
 ): ChatbotAccess {
@@ -26,9 +26,9 @@ export function useChatbotAccess(
 
   if (chatbot.is_public) return "allowed";
 
-  if (chatbot.organization_id) {
-    if (!organization_id) return "org_required";
-    if (chatbot.organization_id !== organization_id) return "org_mismatch";
+  if (chatbot.organization_uuid) {
+    if (!organization_uuid) return "org_required";
+    if (chatbot.organization_uuid !== organization_uuid) return "org_mismatch";
     return "allowed";
   }
 

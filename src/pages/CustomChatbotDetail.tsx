@@ -25,7 +25,7 @@ import axiosInstance from "@/api/axios";
 export default function CustomChatbotDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const chatbotId = Number(id);
+  const chatbotId = id!;
   const { addAlert } = useAlert();
   const queryClient = useQueryClient();
 
@@ -48,14 +48,14 @@ export default function CustomChatbotDetailPage() {
   });
 
   const { data: org } = useQuery<Organization>({
-    queryKey: ["organization", chatbot?.organization_id],
+    queryKey: ["organization", chatbot?.organization_uuid],
     queryFn: async () => {
       const response = await axiosInstance.get<Organization>(
-        API_ENDPOINTS.ORGANIZATION_DETAIL(chatbot!.organization_id),
+        API_ENDPOINTS.ORGANIZATION_DETAIL(chatbot!.organization_uuid!),
       );
       return response.data;
     },
-    enabled: !!chatbot?.organization_id,
+    enabled: !!chatbot?.organization_uuid,
   });
 
   const uploadImageMutation = useMutation({

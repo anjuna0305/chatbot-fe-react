@@ -4,7 +4,7 @@ import { LoginRequest } from "@/types/auth";
 export type AuthState = {
   accessToken: string | null;
   role: string | null;
-  organization_id: string | null;
+  organization_uuid: string | null;
   isAuthenticated: boolean;
 };
 

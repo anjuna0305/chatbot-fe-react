@@ -10,19 +10,19 @@ export const API_ENDPOINTS = {
   FRAMEWORK_UPLOAD: `${API_BASE_URL}/voc-si/api/framework/upload`,
   ASR_WS: WS_BASE_URL,
   CUSTOM_CHATBOT_LIST: `${API_BASE_URL}/custom-chatbots`,
-  CUSTOM_CHATBOT_DETAIL: (id: number) =>
+  CUSTOM_CHATBOT_DETAIL: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/${id}`,
-  CUSTOM_CHATBOT_UPLOAD_IMAGE: (id: number) =>
+  CUSTOM_CHATBOT_UPLOAD_IMAGE: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/${id}/upload-image`,
-  CUSTOM_CHATBOT_UPLOAD_FILE: (id: number) =>
+  CUSTOM_CHATBOT_UPLOAD_FILE: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/${id}/upload-file`,
-  CUSTOM_CHATBOT_PUBLISH: (id: number) =>
+  CUSTOM_CHATBOT_PUBLISH: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/publish/${id}`,
-  CUSTOM_CHATBOT_UNPUBLISH: (id: number) =>
+  CUSTOM_CHATBOT_UNPUBLISH: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/unpublish/${id}`,
-  CUSTOM_CHATBOT_PUBLIC: (id: number) =>
+  CUSTOM_CHATBOT_PUBLIC: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/make-public/${id}`,
-  CUSTOM_CHATBOT_PRIVATE: (id: number) =>
+  CUSTOM_CHATBOT_PRIVATE: (id: string) =>
     `${API_BASE_URL}/custom-chatbots/make-private/${id}`,
   CUSTOM_CHATBOT_BY_URL: (urlPath: string) =>
     `${API_BASE_URL}/custom-chatbots/by-url-path/${urlPath}`,

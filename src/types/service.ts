@@ -1,5 +1,5 @@
 export type Service = {
-  id: number;
+  uuid: string;
   serviceDisplayName: string;
   serviceCodeName: string;
   path: string;

@@ -59,7 +59,7 @@ export default function OrganizationsPage() {
       setDialogOpen(false);
       setForm(INITIAL_FORM);
       setErrors({});
-      navigate(`organizations/${data.id}`);
+      navigate(`organizations/${data.uuid}`);
     },
   });
 
@@ -139,10 +139,10 @@ export default function OrganizationsPage() {
               <TableBody>
                 {organizations.map((org) => (
                   <TableRow
-                    key={org.id}
+                    key={org.uuid}
                     hover
                     sx={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/admin/organizations/${org.id}`)}
+                    onClick={() => navigate(`/admin/organizations/${org.uuid}`)}
                   >
                     <TableCell>{org.name}</TableCell>
                     <TableCell>

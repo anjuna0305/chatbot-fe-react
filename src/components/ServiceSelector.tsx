@@ -43,7 +43,7 @@ export default function ServiceSelector({ services }: Props) {
         onChange={handleServiceChange}
       >
         {services.map((s) => (
-          <MenuItem key={s.id + 100} value={s.serviceCodeName}>
+          <MenuItem key={s.uuid} value={s.serviceCodeName}>
             {s.serviceDisplayName}
           </MenuItem>
         ))}

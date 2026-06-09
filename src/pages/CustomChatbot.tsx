@@ -11,7 +11,7 @@ import { Button } from "@mui/material";
 
 export default function CustomChatbotPage() {
   const { url_path } = useParams<{ url_path: string }>();
-  const { organization_id, isAuthenticated, role } = useAuth();
+  const { organization_uuid, isAuthenticated, role } = useAuth();
 
   const {
     data: chatbotData,
@@ -33,7 +33,7 @@ export default function CustomChatbotPage() {
 
   const access = useChatbotAccess(chatbotData || ({} as CustomChatbot), {
     role,
-    organization_id,
+    organization_uuid,
     isAuthenticated,
   });
 
