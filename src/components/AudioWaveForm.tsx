@@ -25,7 +25,7 @@ interface AudioWaveformProps {
 
 const AudioWaveform = forwardRef<AudioWaveformHandle, AudioWaveformProps>(
   (
-    { width = "100%", height = 80, barColor = "#378ADD", barCount = 48 },
+    { width = "100%", height = 80, barColor = "#2563eb", barCount = 48 },
     ref,
   ) => {
     const [active, setActive] = useState(false);

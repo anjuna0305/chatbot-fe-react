@@ -145,7 +145,7 @@ export default function WaveForm2() {
               minWidth: 4,
               height: 2,
               borderRadius: 2,
-              background: "#378ADD",
+              background: "#2563eb",
               transition: "height 0.07s ease-out,  0.07s ease-out",
             }}
           />
@@ -170,10 +170,10 @@ export default function WaveForm2() {
             padding: "8px 18px",
             borderRadius: 8,
             border: active
-              ? "0.5px solid #185FA5"
+              ? "0.5px solid #1d4ed8"
               : "0.5px solid rgba(0,0,0,0.2)",
-            background: active ? "#E6F1FB" : "transparent",
-            color: active ? "#185FA5" : "inherit",
+            background: active ? "#e0edff" : "transparent",
+            color: active ? "#1d4ed8" : "inherit",
             fontSize: 14,
             cursor: "pointer",
           }}
