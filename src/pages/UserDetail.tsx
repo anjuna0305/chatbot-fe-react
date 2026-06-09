@@ -202,13 +202,10 @@ export default function UserDetailPage() {
 
           {isGeneralAdmin && (
             <Paper sx={{ p: 3 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{ fontWeight: 600, mb: 2 }}
-              >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
                 Change Organization
               </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                 <Autocomplete
                   id="organization-select"
                   options={organizations}
